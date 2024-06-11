@@ -1486,11 +1486,14 @@ static int git_default_core_config(const char *var, const char *value,
 		if (!strcasecmp(value, "auto"))
 			default_abbrev = -1;
 		else if (!git_parse_maybe_bool_text(value))
-			default_abbrev = the_hash_algo->hexsz;
+			default_abbrev = startup_info->have_repository ?
+				the_hash_algo->hexsz : GIT_MAX_HEXSZ;
 		else {
 			int abbrev = git_config_int(var, value, ctx->kvi);
-			if (abbrev < minimum_abbrev || abbrev > the_hash_algo->hexsz)
+			if (abbrev < minimum_abbrev)
 				return error(_("abbrev length out of range: %d"), abbrev);
+			else if (startup_info->have_repository && abbrev > the_hash_algo->hexsz)
+				abbrev = the_hash_algo->hexsz;
 			default_abbrev = abbrev;
 		}
 		return 0;
